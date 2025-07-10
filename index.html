@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Visualizador de Pedido</title>
+        <!-- <link rel="stylesheet" href="styles.css" /> -->
+        <link rel="manifest" href="manifest.json">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f9;
+                margin: 0;
+                padding: 0;
+            }
+
+            .container {
+                width: 80%;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: white;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            h1,
+            h2,
+            h3,
+            h4 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .lineas-header {
+                display: grid;
+                grid-template-columns: 3fr 1fr 1fr 1fr 1fr 2fr;
+                background-color: #007bff;
+                color: white;
+                padding: 10px;
+                text-align: center;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+
+            .lineas-header div {
+                padding: 10px;
+            }
+
+            .lineas-pedidos {
+                max-height: 400px;
+                overflow-y: auto;
+                margin-bottom: 20px;
+            }
+
+            .linea-pedido {
+                display: grid;
+                grid-template-columns: 3fr 1fr 1fr 1fr 1fr 2fr;
+                padding: 10px;
+                border-bottom: 1px solid #ddd;
+                text-align: center;
+            }
+
+            .linea-pedido div {
+                padding: 5px;
+            }
+
+            .input-field {
+                width: 80%;
+                padding: 5px;
+                margin: 0;
+                text-align: center;
+            }
+
+            .button {
+                display: block;
+                width: 200px;
+                margin: 20px auto;
+                padding: 10px;
+                background-color: #28a745;
+                color: white;
+                border: none;
+                font-size: 16px;
+                cursor: pointer;
+            }
+
+            .button:hover {
+                background-color: #218838;
+            }
+
+            .dato-producto {
+                text-align: left;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Visualizador de Pedido</h1>
+
+            <input type="file" id="inputArchivo" accept=".json" style="display: none" />
+            <button id="cargarArchivo" class="button">Cargar Pedido</button>
+
+            <h2>Pedido: <span id="codigoPedido"></span></h2>
+            <h2>Punto de Entrega: <span id="clientePedido"></span></h2>
+            <h4>Fecha: <span id="fechaPedido"></span></h4>
+
+            <div class="lineas-header">
+                <div style="display: none">Ide Producto</div>
+                <div style="display: none">Unidades Envase</div>
+                <div>Producto</div>
+                <div>Cajas</div>
+                <div>Unidades</div>
+                <div>Precio</div>
+                <div>Total</div>
+                <div>Comentario</div>
+            </div>
+
+            <div id="lineasPedidos" class="lineas-pedidos">
+                <!-- Las líneas del pedido se generarán aquí -->
+            </div>
+
+            <button id="exportarPedido" class="button">Exportar Pedido</button>
+        </div>
+
+        <!-- <script src="app.js"></script> -->
+        <script>
+            // Función para cargar el JSON y mostrar los datos
+            function cargarPedidoDesdeArchivo(event) {
+                const archivo = event.target.files[0]; // Obtener el archivo seleccionado
+                if (!archivo) {
+                    alert("Por favor, selecciona un archivo JSON.");
+                    return;
+                }
+
+                const lector = new FileReader();
+                lector.onload = function (e) {
+                    try {
+                        const pedido = JSON.parse(e.target.result);
+
+                        // Mostrar cabecera del pedido
+                        document.getElementById("codigoPedido").textContent = pedido.codigo;
+                        document.getElementById("clientePedido").textContent = pedido.puntoEntrega;
+                        document.getElementById("fechaPedido").textContent = pedido.fecha;
+
+                        // Limpiar las líneas de pedido previas antes de agregar nuevas
+                        const lineasContainer = document.getElementById("lineasPedidos");
+                        lineasContainer.innerHTML = "";
+
+                        // Mostrar líneas del pedido
+                        pedido.lineas.forEach((linea) => {
+                            if (linea == null) {
+                                return;
+                            }
+                            const totalLinea =
+                                parseFloat(linea.precio) * (parseFloat(linea.cantidad) || 0);
+                            const lineaElement = document.createElement("div");
+                            lineaElement.classList.add("linea-pedido");
+
+                            // Crear campos de entrada para cada columna
+                            lineaElement.innerHTML = `
+                    <div style='display: none'>${linea.ideProducto}</div>
+                    <input type="number" style='display: none' value="${
+                        linea.cantidadEnvase
+                    }" class="input-field" data-key="cantidadEnvase" />
+                    <div class='dato-producto' data-key="descripcion">${linea.codigo} - ${
+                                linea.descripcion
+                            }</div>
+                    <input type="number" value="${
+                        linea.cajas
+                    }" class="input-field" data-key="cajas" />
+                    <input type="number" value="${
+                        linea.cantidad
+                    }" class="input-field" step="0.01" data-key="cantidad" />
+                    <input type="number" value="${
+                        linea.precio
+                    }" class="input-field" step="0.01" data-key="precio" />
+                    <div class="total">${totalLinea.toFixed(2)} €</div>
+                    <input type="text" value="${
+                        linea.descripcionLarga
+                    }" class="input-field" data-key="comentario" />
+                `;
+
+                            // Actualizar el total al cambiar cantidad o precio
+                            lineaElement.querySelectorAll("input").forEach((input) => {
+                                input.addEventListener("input", function () {
+                                    actualizarTotal(lineaElement);
+                                });
+                            });
+
+                            lineasContainer.appendChild(lineaElement);
+                        });
+                    } catch (error) {
+                        alert(
+                            "Error al cargar el archivo JSON. Verifica que el formato sea correcto."
+                        );
+                    }
+                };
+                lector.readAsText(archivo);
+            }
+
+            // Función para actualizar el total de la línea
+            function actualizarTotal(lineaElement) {
+                const cajas =
+                    parseFloat(lineaElement.querySelector("[data-key='cajas']").value) || 0;
+                const cantidadEnvase =
+                    parseFloat(lineaElement.querySelector("[data-key='cantidadEnvase']").value) ||
+                    0;
+                const cantidad =
+                    parseFloat(lineaElement.querySelector("[data-key='cantidad']").value) || 0;
+                const precio =
+                    parseFloat(lineaElement.querySelector("[data-key='precio']").value) || 0;
+                const totalElement = lineaElement.querySelector(".total");
+                if (cajas > 0) {
+                    console.log(
+                        "Cajas:",
+                        cajas,
+                        "Cantidad Envase:",
+                        cantidadEnvase,
+                        "Precio:",
+                        precio
+                    );
+                    totalElement.textContent = (cajas * cantidadEnvase * precio).toFixed(2) + " €";
+                } else {
+                    totalElement.textContent = (cantidad * precio).toFixed(2) + " €";
+                }
+            }
+
+            // Función para exportar el pedido a JSON
+            function exportarPedido() {
+                const pedidoExport = {
+                    codigo: document.getElementById("codigoPedido").textContent,
+                    cliente: document.getElementById("clientePedido").textContent,
+                    fecha: document.getElementById("fechaPedido").textContent,
+                    lineas: []
+                };
+
+                const lineas = document.querySelectorAll(".linea-pedido");
+                lineas.forEach((linea) => {
+                    const ideProducto = linea.querySelector("div").textContent;
+                    const descripcion = linea.querySelector("[data-key='descripcion']").textContent;
+                    const cajas = parseFloat(linea.querySelector("[data-key='cajas']").value) || 0;
+                    const cantidad =
+                        parseFloat(linea.querySelector("[data-key='cantidad']").value) || 0;
+                    const precio =
+                        parseFloat(linea.querySelector("[data-key='precio']").value) || 0;
+                    const comentario = linea.querySelector("[data-key='comentario']").value;
+
+                    pedidoExport.lineas.push({
+                        ideProducto,
+                        descripcion,
+                        cajas,
+                        cantidad,
+                        precio,
+                        comentario
+                    });
+                });
+
+                const blob = new Blob([JSON.stringify(pedidoExport, null, 2)], {
+                    type: "application/json"
+                });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = normalizarNombreArchivo(pedidoExport.codigo) + "_con_datos.json";
+                link.click();
+            }
+
+            // Inicializar el pedido cuando se carga la página
+            document.addEventListener("DOMContentLoaded", () => {
+                // Activar el input de archivo al hacer clic en el botón
+                document.getElementById("cargarArchivo").addEventListener("click", () => {
+                    document.getElementById("inputArchivo").click();
+                });
+
+                // Manejar la carga del archivo
+                document
+                    .getElementById("inputArchivo")
+                    .addEventListener("change", cargarPedidoDesdeArchivo);
+                document.getElementById("exportarPedido").addEventListener("click", exportarPedido);
+            });
+
+            function normalizarNombreArchivo(nombreOriginal) {
+                return nombreOriginal
+                    .normalize("NFD") // Elimina acentos
+                    .replace(/[\u0300-\u036f]/g, "") // Remueve marcas diacríticas
+                    .replace(/[^a-zA-Z0-9-_\.]/g, "_") // Sustituye caracteres especiales por _
+                    .replace(/_+/g, "_") // Evita múltiples guiones bajos
+                    .replace(/^_+|_+$/g, "") // Elimina _ al inicio o al final
+                    .toLowerCase(); // Convierte a minúsculas
+            }
+        </script>
+    </body>
+</html>
