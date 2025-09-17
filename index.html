@@ -258,7 +258,7 @@
                 });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = normalizarNombreArchivo(pedidoExport.codigo) + "_con_datos.json";
+                link.download = normalizarNombreArchivo(pedidoExport.codigo + "_" + pedidoExport.cliente.split(" - ")[0]) + "_con_datos.json";
                 link.click();
             }
 
