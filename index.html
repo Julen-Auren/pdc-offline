@@ -89,6 +89,12 @@
             .dato-producto {
                 text-align: left;
             }
+
+            .no-editable {
+                background-color: #f0f0f0; /* gris claro */
+                color: #666;              /* texto gris oscuro */
+                pointer-events: none;     /* evita que se pueda clicar/focus */
+            }
         </style>
     </head>
     <body>
@@ -168,7 +174,7 @@
                     }" class="input-field" data-key="cajas" />
                     <input type="number" value="${
                         linea.cantidad
-                    }" class="input-field" step="0.01" data-key="cantidad" />
+                    }" class="input-field ${linea.envasesCompletos === "1" ? "no-editable" : ""}" step="0.01" data-key="cantidad" ${linea.envasesCompletos === "1" ? "readonly" : ""} />
                     <input type="number" value="${
                         linea.precio
                     }" class="input-field" step="0.01" data-key="precio" />
