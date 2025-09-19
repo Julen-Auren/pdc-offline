@@ -161,8 +161,7 @@
                             const lineaElement = document.createElement("div");
                             lineaElement.classList.add("linea-pedido");
 
-                            if ((!linea.cajas || linea.cajas === 0)
-                                && linea.cantidad > 0
+                            if (linea.cantidad > 0
                                 && linea.cantidadEnvase > 0) {
 
                                 // Calculamos cuántas cajas completas entran
