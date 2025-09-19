@@ -155,10 +155,26 @@
                             if (linea == null) {
                                 return;
                             }
+                            
                             const totalLinea =
                                 parseFloat(linea.precio) * (parseFloat(linea.cantidad) || 0);
                             const lineaElement = document.createElement("div");
                             lineaElement.classList.add("linea-pedido");
+
+                            if ((!linea.cajas || linea.cajas === 0)
+                                && linea.cantidad > 0
+                                && linea.cantidadEnvase > 0) {
+
+                                // Calculamos cuántas cajas completas entran
+                                const cajas = Math.floor(linea.cantidad / linea.cantidadEnvase);
+
+                                // Calculamos el resto (unidades sueltas)
+                                const sueltas = linea.cantidad % linea.cantidadEnvase;
+
+                                // Asignamos a los campos del objeto
+                                linea.cajas = cajas;
+                                linea.cantidad = sueltas;
+                            }
 
                             // Crear campos de entrada para cada columna
                             lineaElement.innerHTML = `
