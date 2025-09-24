@@ -184,12 +184,8 @@
                     <div class='dato-producto' data-key="descripcion">${linea.codigo} - ${
                                 linea.descripcion
                             }</div>
-                    <input type="number" value="${
-                        linea.cajas
-                    }" class="input-field" data-key="cajas" />
-                    <input type="number" value="${
-                        linea.cantidad
-                    }" class="input-field ${linea.envasesCompletos === "1" ? "no-editable" : ""}" step="0.01" data-key="cantidad" ${linea.envasesCompletos === "1" ? "readonly" : ""} />
+                    <input type="number" value="${linea.cajas === 0 ? '' : linea.cajas}"  class="input-field" data-key="cajas" />
+                    <input type="number" value="${linea.cantidad === 0 ? '' : linea.cantidad}" class="input-field ${linea.envasesCompletos === "1" ? "no-editable" : ""}" step="0.01" data-key="cantidad" ${linea.envasesCompletos === "1" ? "readonly" : ""} />
                     <input type="number" value="${
                         linea.precio
                     }" class="input-field" step="0.01" data-key="precio" />
